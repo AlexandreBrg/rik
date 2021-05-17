@@ -4,7 +4,7 @@ package scheduler;
 
 message Empty {}
 
-message Contener {
+message Container {
   string name = 1;
   string image = 2;
   repeated string command = 3;
@@ -12,7 +12,7 @@ message Contener {
 
 message WorkLoad {
   string name = 1;
-  Contener contener = 2;
+  Container container = 2;
 }
 
 enum ResourceStatus {
