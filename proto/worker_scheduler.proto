@@ -10,6 +10,6 @@ enum RegisterStatus {
   REJECTED = 2;
 }
 
-service Controller {
+service Scheduler {
   rpc Register(Worker) returns (RegisterStatus );
 }

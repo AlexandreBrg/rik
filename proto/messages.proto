@@ -4,37 +4,37 @@ package scheduler;
 
 message Empty {}
 
-message Contener {
-  string name = 1;
-  string image = 2;
-  repeated string command = 3;
-}
-
 message WorkLoad {
   string name = 1;
-  Contener contener = 2;
+  string packageName = 2;
 }
 
 enum ResourceStatus {
-  PENDING = 0;
-  RUNNING = 1;
-  SUCCEEDED = 2;
+  UNKNOWN = 0;
+  PENDING = 1;
+  RUNNING = 2;
   FAILED = 3;
-  UNKNOWN = 4;
+}
+
+message ScheduleResponse {
+    enum ScheduleStatus {
+        UNKNOWN = 0;
+        OK = 1;
+        REJECTED = 2;
+    }
+    ScheduleStatus status = 1;
 }
 
 message WorkerMetric {
   ResourceStatus status = 1;
-}
-
-message WorkerMetricResponse {
-  repeated ResourceStatus status = 1;
+  float memory = 2;
+  float cpu = 3;
 }
 
 message WorkLoadMetric {
   ResourceStatus status = 1;
-  optional int32 memory = 2;
-  optional int32 cpu = 3;
+  float memory = 2;
+  float cpu = 3;
 }
 
 message WorkLoadMetricResponse {
