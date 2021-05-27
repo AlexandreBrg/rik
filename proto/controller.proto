@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+import "./messages.proto";
+
+// The Controller service for the Scheduler 
+service Scheduler {
+  // Worker registration on The Controller.
+  rpc Register(Worker) returns (RegisterStatus);
+}
+
+message Worker {
+  string name = 1;
+}
+
+enum RegisterStatus {
+  UNKNOWN = 0;
+  OK = 1;
+  REJECTED = 2;
+}

@@ -2,8 +2,6 @@ syntax = "proto3";
 
 package scheduler;
 
-message Empty {}
-
 message WorkLoad {
   string name = 1;
   string packageName = 2;
@@ -16,14 +14,14 @@ enum ResourceStatus {
   FAILED = 3;
 }
 
-message ScheduleResponse {
-    enum ScheduleStatus {
-        UNKNOWN = 0;
-        OK = 1;
-        REJECTED = 2;
-    }
-    ScheduleStatus status = 1;
-}
+// message ScheduleResponse {
+//     enum ScheduleStatus {
+//         UNKNOWN = 0;
+//         OK = 1;
+//         REJECTED = 2;
+//     }
+//     ScheduleStatus status = 1;
+// }
 
 message WorkerMetric {
   ResourceStatus status = 1;
@@ -31,12 +29,15 @@ message WorkerMetric {
   float cpu = 3;
 }
 
-message WorkLoadMetric {
+message InstanceMetric {
   ResourceStatus status = 1;
   float memory = 2;
   float cpu = 3;
 }
 
-message WorkLoadMetricResponse {
-  repeated ResourceStatus status = 1;
+message Status {
+ oneof status {
+       InstanceMetric instance = 1;
+       WorkerMetric worker = 2;
+ }
 }
