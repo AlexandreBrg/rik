@@ -1,19 +1,15 @@
+
 syntax = "proto3";
 
 import "./messages.proto";
 
-// The Controller service for the Scheduler 
-service Scheduler {
-  // Worker registration on The Controller.
-  rpc Register(Worker) returns (RegisterStatus);
-}
+// The Scheduler service for the Controller
+service Controller {
+  // A request for scheduling an instance of a workload.
+  // Success means the instance is pending.
+  rpc ScheduleInstance(scheduler.Workload) returns (google.protobuf.Empty);
 
-message Worker {
-  string name = 1;
-}
-
-enum RegisterStatus {
-  UNKNOWN = 0;
-  OK = 1;
-  REJECTED = 2;
+  // Get worker and instances status updates.
+  // Returns a stream of Status messages.
+  rpc GetStatusUpdates(google.protobuf.Empty) returns (stream Status);
 }
