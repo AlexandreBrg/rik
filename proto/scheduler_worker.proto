@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+import "./messages.proto";
+
+service Worker{
+  rpc Schedule(scheduler.WorkLoad) returns (scheduler.ScheduleResponse);
+
+  rpc GetWorkerMetric(scheduler.Empty) returns (scheduler.WorkerMetric);
+
+  rpc GetWorkLoadMetrics(scheduler.Empty) returns (scheduler.WorkLoadMetricResponse);
+}

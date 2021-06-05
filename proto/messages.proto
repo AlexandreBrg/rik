@@ -9,7 +9,6 @@ message WorkLoad {
   string image = 3;
 }
 
-// Status for WorkLoad instances and Worker 
 enum ResourceStatus {
   UNKNOWN = 0;
   PENDING = 1;

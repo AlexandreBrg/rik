@@ -2,10 +2,9 @@
 
 ## Main goal
 
-The `scheduler` goal is to determine whether or not a workload can work on the cluster.
-In the case a workload fits to a node, we send severals orders & informations to the node so
-he can handle the needed workload. The controller can also determine in a first time, if a workload can be managed in the cluster, but
-the scheduler has the **last word** on it. 
+The `scheduler` goal is to find the appropriate location for a workload's instance to be ran.
+In the case an instance fits to a node, `scheduler` orders the worker node to run it. The controller determines
+if the requested resources from the workload can be managed in the cluster, and then the scheduler receives the `scheduling request`.
 
 This service **must** be able at anytime, to request a delete or an update of a workload on a specific
 node. These requests will be sent based on event the scheduler receive. The events are coming either from the controller or from a node.
@@ -17,17 +16,19 @@ considering that, this service must be able to recover from a crash **quickly** 
 
 **Features summary**:
 
-* Allocate a workload to a node
+* Select an appropriate worker node for workload instance to run on.
 * Request workload update 
 * Request workload deletion
 * Handle statistics & hardware informations from nodes
-* Lift up informations from nodes to controller 
-* Handle various events from nodes 
+* Forward informations from nodes to controller 
 
 **Glossary:**
-
+* Node: A server of the cluster
+* Node server: The master node which contain cluster essentials components
+* Node worker: A slave node wich receive instruction from master node
 * Worker: entity managing workloads and managed by the scheduler & controller
-* Workload: a unit of work needed to be deployed inside a worker
+* Workload: a definition of an unit of work needed to be deployed inside a worker (i.e. a yaml file)
+* Instance: Defined by a workload, it is an instance of the workload. A workload isn't limited to a single instance. 
 * Cluster: the whole architecture containing every single component of this project. 
 * Server / Master: a server containing every administrative services (scheduler & controller)
 
@@ -35,40 +36,7 @@ considering that, this service must be able to recover from a crash **quickly** 
 
 ## Architecture overview
 
-![Architecture overview](./assets/arch_overview.png)
-
-
-The `scheduler` domain is composed of two main services, which are composed of multiple components.
-The main service is `scheduler` which communicate with the controller to know when to deploy a new
-workload, update or delete one. The `watcher` is a service to determine whether or not a worker
-is down or still up. It will also receive metrics & events coming from the workers and then redirect
-them to the scheduler.
-
-**Scheduler**
-
-*The scheduler handles the whole logic of the scheduler by receiving events from the scheduler API. This API communicate
-with either the controller and the watcher.*
-
-Components:
-
-* `scheduler/api`: API which receive and send requests to needed services
-* `events/handler`: Depending on the type of API calls received, the event handler will redirect
-the information to the proper sub-component.
-* `workload/manager`: Process an event related to a workload getting down, to be destroyed or needs to be moved
-* `workload/scheduler`: Process controller events needing to schedule a new workload on the cluster
-
-**Watcher**
-
-*The watcher is here to handle requests coming either from scheduler and nodes. It watch after nodes
-in order to create events so the scheduler is warned as soon as a node is down.*
-
-Components:
-
-* `watcher/api`: API which receive and send requests to needed services
-* `api/handler`: Handle API calls and redirect them properly
-* `node/watcher`: Running continuous watch process to know when a node is down
-* `cluster/monitor`: Handle API calls relative to statistics and nodes monitoring
-* `cluster/state_save`: Save the current state of the cluster 
+![Architecture overview](https://cdn.discordapp.com/attachments/828205813336244254/842476988290695187/a051f160-4d85-4c5c-a49b-0354ca9272d2.png)
 
 ## Communication in the cluster 
 
@@ -83,34 +51,9 @@ to write APIs for each component.
 On top of that, we will be using [gRPC](https://grpc.io/) for communication between components. It will be handy to use 
 as API definitions are defined through [protoBuf](https://developers.google.com/protocol-buffers). 
 
-There is an interrogation around the controller & scheduler communication. They may be in the same 
-physical machine and not isolated one from another, so do we still need to use gRPC here ? Can't we 
-use any other solution of communication, as we are on the same physical machine ?
-
 The APIs exposed by our components must be defined through the need defined by the team 
 [controller](#controller) and the team [node](#node)
 
----
-
-## Watcher 
-
-### Events 
-
-Watcher will work with an etcd to store usual and non highly dynamical data.
-The etcd will store:
- - Number of workers
- - workers alias (to improve/simplify communication)
- - worker properties (such as cpu, RAM, memory, etc)
-
-Watcher is here to handle worker data, requesting it to the node manager/agent throught an API.
-Watcher will store in RAM the actual state of each nodes (idle, running, reloading, crashing, etc) and can give this metrics to scheduler when needed. If a node crash/restart, watcher will update datas in etcd.
-Watcher is the only point of communication with workers, it mean that he have to transfert scheduler instructions to the appropriate worker by resolving it using etcd alias name.
-
-### Recovery in case of crash
-
-Watcher self re-instanciate himself and get last data/metrics saved from etcd.
-etcd make sense because it provide a key/value storage that can be roles based ( leaders can read write update and other can readonly ). Provide safe cold storage on disk and great performance, can handle event on change (well to couple with watcher or controller maybe ). etcd is shared by all server components (read only), so we can get state metrics directly from controller or scheduler if it make sense.
-[source](https://www.ibm.com/cloud/learn/etcd)
 
 ---
 
@@ -143,7 +86,7 @@ This definition is here to give a scope to what is needed in the V0 of the produ
 - Schedule / Unschedule a workload on the worker 
 - Receive simple metrics from the worker
 - Knowing whether the worker can handle a workload
-- Lift up to the controller a workload when it gets stopped (expected or not)
+- Forward to the controller a workload when it gets stopped (expected or not)
 
 ## Schematic
 
@@ -164,3 +107,31 @@ Following part is a list of questions needing answers.
 
 - When are defined the networking rules and adressing over the network ? Also, does the networking modules are linked to the controller ? 
 - In the V0 will be there any constraint from networking on scheduler ?
+
+---
+
+## Deprecated 
+
+### Watcher 
+
+Watcher is here to handle worker data, requesting it to the node manager/agent throught an API.
+Watcher will store in RAM the actual state of each nodes (idle, running, reloading, crashing, 
+etc) and can give this metrics to scheduler when needed. If a node crash/restart, watcher will 
+update datas in etcd.
+Watcher is the only point of communication with workers, it mean that he have to transfert
+ scheduler instructions to the appropriate worker by resolving it using etcd alias name.
+
+
+#### Events 
+
+Watcher will work with an etcd to store usual and non highly dynamical data.
+The etcd will store:
+ - Number of workers
+ - workers alias (to improve/simplify communication)
+ - worker properties (such as cpu, RAM, memory, etc)
+
+#### Recovery in case of crash
+
+Watcher self re-instanciate himself and get last data/metrics saved from etcd.
+etcd make sense because it provide a key/value storage that can be roles based ( leaders can read write update and other can readonly ). Provide safe cold storage on disk and great performance, can handle event on change (well to couple with watcher or controller maybe ). etcd is shared by all server components (read only), so we can get state metrics directly from controller or scheduler if it make sense.
+[source](https://www.ibm.com/cloud/learn/etcd)

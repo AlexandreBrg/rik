@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+message Worker {
+  string name = 1;
+}
+
+enum RegisterStatus {
+  UNKNOWN = 0;
+  OK = 1;
+  REJECTED = 2;
+}
+
+service Scheduler {
+  rpc Register(Worker) returns (RegisterStatus );
+}
