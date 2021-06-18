@@ -1,7 +1,7 @@
 
 syntax = "proto3";
 
-import "./messages.proto";
+import "./common.proto";
 
 // The Scheduler service for the Controller
 service Controller {

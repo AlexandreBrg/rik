@@ -1,37 +1,17 @@
 syntax = "proto3";
 
-package scheduler;
+import "common.proto";
+import "google/protobuf/empty.proto";
 
-// Simple WorkLoad description
-message WorkLoad {
-  string name = 1;
-  string tag = 2;
-  string image = 3;
-}
+package controller;
 
-enum ResourceStatus {
-  UNKNOWN = 0;
-  PENDING = 1;
-  RUNNING = 2;
-  FAILED = 3;
-  TERMINATING = 4;
-}
+// The Scheduler service for the Controller
+service Controller {
+  // A request for scheduling an instance of a workload.
+  // Success means the instance is pending.
+  rpc ScheduleInstance(common.Workload) returns (google.protobuf.Empty);
 
-// Metrics definition for Workers
-message WorkerMetric {
-  ResourceStatus status = 1;
-  string metrics = 2;
-}
-
-// Metrics definition for WorkLoad instances
-message InstanceMetric {
-  ResourceStatus status = 1;
-}
-
-// Definition of metrics send by node
-message Status {
- oneof status {
-       InstanceMetric instance = 1;
-       WorkerMetric worker = 2;
- }
+  // Get worker and instances status updates.
+  // Returns a stream of Status messages.
+  rpc GetStatusUpdates(google.protobuf.Empty) returns (stream common.WorkerStatus);
 }
